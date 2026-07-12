@@ -36,54 +36,62 @@ runpeak-ecommerce/
 4. Revisión de código y validaciones de seguridad (CodeQL, Dependabot).
 5. Merge a `main` con trazabilidad del cambio.
 
-## Ejecución local
+## Inicio rápido local
 
-### 1. Base de datos
+Requisitos: Docker, Docker Compose, Node.js y npm.
 
-La base de datos local corre en Docker y conserva sus datos en un volumen:
+Todos los comandos siguientes se ejecutan desde la raíz del repositorio.
 
-```bash
-docker compose up -d postgres
-docker compose ps
-```
-
-PostgreSQL queda disponible en `localhost:5432` con la base de datos y usuario
-`runpeak`. Las credenciales son exclusivamente locales.
-
-### 2. Variables de entorno
+### 1. Preparar el entorno
 
 ```bash
 cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
+npm --prefix backend install
+npm --prefix frontend install
 ```
 
-### 3. Instalar dependencias
+### 2. Iniciar PostgreSQL
 
 ```bash
-cd backend && npm install
-cd ../frontend && npm install
+docker compose up -d
+docker compose ps
 ```
 
-### 4. Backend
+> `compose.yaml` es el archivo de configuración; no se escribe como subcomando.
+> En este proyecto no necesitas `build`: Compose solo inicia PostgreSQL desde
+> una imagen ya publicada.
+
+### 3. Crear las tablas y datos iniciales
 
 ```bash
-cd backend
-npm run db:setup
-npm run dev
+npm --prefix backend run db:setup
 ```
 
-El backend queda disponible en `http://localhost:3000`.
+### 4. Iniciar la aplicación
 
-### 5. Frontend
-
-En otra terminal:
+Terminal 1 (backend):
 
 ```bash
-cd frontend
-npm run dev
+npm --prefix backend run dev
 ```
 
-El frontend queda disponible en `http://localhost:5173`.
+Terminal 2 (frontend):
+
+```bash
+npm --prefix frontend run dev
+```
+
+Abre `http://localhost:5173`. La API queda en `http://localhost:3000/api`.
+
+Para detener PostgreSQL:
+
+```bash
+docker compose down
+```
+
+Los datos se conservan en un volumen de Docker. Para eliminarlos también, usa
+`docker compose down -v`.
 
 ### Health check
 
@@ -135,50 +143,79 @@ completo, pero no procesa ni almacena números de tarjeta. Para aceptar dinero
 real se debe integrar una pasarela como Mercado Pago, Culqi o Stripe y confirmar
 el pago mediante webhooks antes de marcar el pedido como pagado.
 
-## Configuración de producción
+## Despliegue simple: Supabase + Vercel
 
-Para el MVP se recomienda crear dos proyectos de Vercel conectados al mismo
-repositorio y una base PostgreSQL en Supabase.
+El despliegue usa tres recursos: una base de datos en Supabase y dos proyectos
+en Vercel (backend y frontend). Ambos proyectos de Vercel apuntan al mismo
+repositorio.
 
-### 1. Backend en Vercel
+### 1. Crear la base de datos
 
-1. Importar el repositorio en Vercel.
-2. Configurar **Root Directory** como `backend`.
-3. Vercel detectará Express automáticamente.
-4. Agregar estas variables para Production y Preview:
+1. Crea un proyecto en Supabase.
+2. En **Connect**, copia la URL **Transaction pooler** (puerto `6543`).
+3. Guárdala temporalmente: se usará como `DATABASE_URL`.
+
+### 2. Desplegar el backend
+
+1. En Vercel, importa este repositorio.
+2. En **Root Directory**, selecciona `backend`.
+3. Agrega estas variables de entorno:
 
 ```text
-DATABASE_URL=<Transaction pooler de Supabase, puerto 6543>
+DATABASE_URL=<URL Transaction pooler de Supabase>
 DATABASE_SSL=true
 DATABASE_POOL_MAX=3
-FRONTEND_URL=https://<dominio-del-frontend>
+FRONTEND_URL=https://<dominio-del-frontend-en-vercel>
 AUTH_SECRET=<secreto-aleatorio-largo>
 ADMIN_EMAIL=<correo-administrador>
 ADMIN_PASSWORD=<contraseña-segura-inicial>
 ```
 
-Para varias URLs permitidas en CORS, separar `FRONTEND_URL` con comas.
+4. Pulsa **Deploy** y copia el dominio generado para el backend.
 
-### 2. Frontend en Vercel
+El dominio del frontend todavía no existirá en el primer despliegue. Puedes
+completar `FRONTEND_URL` después del paso 3 y volver a desplegar el backend.
 
-1. Importar nuevamente el mismo repositorio como otro proyecto.
-2. Configurar **Root Directory** como `frontend`.
-3. Agregar la variable antes de desplegar:
+### 3. Desplegar el frontend
+
+1. En Vercel, importa nuevamente el mismo repositorio como otro proyecto.
+2. En **Root Directory**, selecciona `frontend`.
+3. Agrega esta variable de entorno:
 
 ```text
 VITE_API_URL=https://<dominio-del-backend>/api
 ```
 
+4. Pulsa **Deploy** y copia el dominio generado para el frontend.
+5. Regresa al proyecto del backend, asigna ese dominio a `FRONTEND_URL` y vuelve
+   a desplegarlo.
+
+### 4. Crear tablas y usuario administrador
+
+Desde una terminal local, ejecuta una sola vez:
+
+```bash
+cd backend
+DATABASE_URL='<URL Transaction pooler de Supabase>' \
+DATABASE_SSL=true \
+ADMIN_EMAIL='<correo-administrador>' \
+ADMIN_PASSWORD='<contraseña-segura>' \
+npm run db:setup
+cd ..
+```
+
+### 5. Comprobar el despliegue
+
+```bash
+curl https://<dominio-del-backend>/api/health
+curl https://<dominio-del-backend>/api/health/db
+```
+
+Ambas respuestas deben indicar `OK`. Después abre el dominio del frontend y
+prueba el catálogo y el inicio de sesión.
+
+Para permitir varios dominios en CORS, sepáralos con comas en `FRONTEND_URL`.
 El archivo `frontend/vercel.json` permite abrir directamente rutas SPA como
 `/catalogo`, `/carrito` o `/admin` sin recibir un error 404.
-
-### 3. Supabase
-
-1. Crear un proyecto de Supabase.
-2. Abrir **Connect** y copiar la conexión **Transaction pooler** (puerto 6543),
-   recomendada para funciones serverless.
-3. Guardar esa URL únicamente como `DATABASE_URL` en Vercel.
-4. Crear o ejecutar las migraciones de las tablas cuando se agregue el modelo
-   de datos del MVP.
 
 No copiar los archivos `.env` locales a Vercel ni guardar secretos en Git.
