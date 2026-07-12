@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "frontend",
+      "runtimeExecutable": "cmd.exe",
+      "runtimeArgs": ["/c", "pushd \\\\wsl.localhost\\Ubuntu\\home\\palcarls\\projects\\runpeak-ecommerce\\frontend && npm run dev"],
+      "port": 5173
+    },
+    {
+      "name": "backend",
+      "runtimeExecutable": "cmd.exe",
+      "runtimeArgs": ["/c", "pushd \\\\wsl.localhost\\Ubuntu\\home\\palcarls\\projects\\runpeak-ecommerce\\backend && npm run dev"],
+      "port": 3000
+    }
+  ]
+}
