@@ -1,6 +1,7 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
-import type { CartItem, AdminProduct, AdminOrder, LastOrder } from '../types';
-import { COUPONS, ADMIN_ORDERS, initialAdminProducts } from '../data/products';
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import type { CartItem, AdminProduct, AdminOrder, LastOrder, Product } from '../types';
+import { COUPONS, ADMIN_ORDERS, RAW_PRODUCTS, initialAdminProducts } from '../data/products';
+import { api } from '../api';
 
 interface AppState {
   cart: CartItem[];
@@ -11,6 +12,8 @@ interface AppState {
   adminCoupons: typeof COUPONS;
   adminOrders: AdminOrder[];
   searchOpen: boolean;
+  products: Product[];
+  apiError: string | null;
 
   subtotal: number;
   shipping: number;
@@ -23,8 +26,8 @@ interface AppState {
   removeItem: (id: string, size: string) => void;
   toggleFavorite: (id: string) => void;
   removeFavorite: (id: string) => void;
-  applyCoupon: () => void;
-  placeOrder: () => void;
+  applyCoupon: () => Promise<void>;
+  placeOrder: () => Promise<void>;
   setSearchOpen: (open: boolean) => void;
 
   toggleAdminProductStatus: (id: string) => void;
@@ -49,10 +52,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [adminCoupons, setAdminCoupons] = useState(COUPONS);
   const [adminOrders] = useState<AdminOrder[]>(ADMIN_ORDERS);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [products, setProducts] = useState<Product[]>(RAW_PRODUCTS);
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [freeShipping, setFreeShipping] = useState(false);
+
+  useEffect(() => {
+    Promise.all([api.products(), api.coupons()])
+      .then(([remoteProducts, remoteCoupons]) => {
+        setProducts(remoteProducts);
+        setAdminCoupons(remoteCoupons);
+        setAdminProducts(remoteProducts.map((product) => ({
+          id: product.id, name: product.name, category: product.category, price: product.price,
+          img: product.img, stock: (product as Product & { stock?: number }).stock ?? 0, active: true,
+        })));
+        setApiError(null);
+      })
+      .catch((error: Error) => setApiError(error.message));
+  }, []);
 
   const subtotal = useMemo(() => cart.reduce((sum, c) => sum + c.price * c.qty, 0), [cart]);
-  const shipping = cart.length ? 15 : 0;
-  const discount = couponApplied ? Math.round(subtotal * 0.05) : 0;
+  const shipping = cart.length && !freeShipping ? 15 : 0;
+  const discount = couponApplied ? couponDiscount : 0;
   const total = subtotal - discount + shipping;
   const cartCount = useMemo(() => cart.reduce((sum, c) => sum + c.qty, 0), [cart]);
 
@@ -80,14 +101,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setFavorites(prev => prev.filter(f => f !== id));
   }
 
-  function applyCoupon() {
+  async function applyCoupon() {
+    const result = await api.validateCoupon('BIENVENIDA10', subtotal);
+    setCouponDiscount(result.discount);
+    setFreeShipping(result.freeShipping);
     setCouponApplied(true);
   }
 
-  function placeOrder() {
-    setLastOrder({ items: cart, total, number: 'RP-20260712-0417' });
+  async function placeOrder() {
+    const order = await api.createOrder(cart, {
+      name: 'Carlos Palomino Turpo', email: 'carlos@runpeak.demo', phone: '+51 987 654 321',
+      address: 'Av. Ejército 123, Cayma', city: 'Arequipa', reference: 'Frente al parque',
+    }, couponApplied ? 'BIENVENIDA10' : undefined);
+    setLastOrder({ items: order.items, total: Number(order.total), number: order.order_number });
     setCart([]);
     setCouponApplied(false);
+    setCouponDiscount(0);
+    setFreeShipping(false);
   }
 
   function toggleAdminProductStatus(id: string) {
@@ -115,7 +145,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }
 
   const value: AppState = {
-    cart, favorites, couponApplied, lastOrder, adminProducts, adminCoupons, adminOrders, searchOpen,
+    cart, favorites, couponApplied, lastOrder, adminProducts, adminCoupons, adminOrders, searchOpen, products, apiError,
     subtotal, shipping, discount, total, cartCount,
     addToCart, updateQty, removeItem, toggleFavorite, removeFavorite, applyCoupon, placeOrder, setSearchOpen,
     toggleAdminProductStatus, removeAdminProduct, addAdminProduct, removeAdminCoupon, addAdminPromo

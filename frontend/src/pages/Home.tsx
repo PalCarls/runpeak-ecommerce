@@ -1,16 +1,16 @@
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import { RAW_PRODUCTS, TESTIMONIALS } from '../data/products';
-import ProductCard from '../components/ProductCard';
+import { TESTIMONIALS } from '../data/products';
 import { useApp } from '../context/AppContext';
+import ProductCard from '../components/ProductCard';
 
 const SIZES = ['38', '39', '40', '41', '42'];
 
 export default function Home() {
+  const { products, addToCart } = useApp();
   const navigate = useNavigate();
-  const { addToCart } = useApp();
   const [heroSize, setHeroSize] = useState('39');
-  const hero = RAW_PRODUCTS[0];
+  const hero = products[0];
 
   return (
     <div>
@@ -73,7 +73,7 @@ export default function Home() {
           <a href="#" onClick={(e) => { e.preventDefault(); navigate('/catalogo'); }} style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '2px solid var(--rp-orange)', paddingBottom: 2 }}>Ver todo &#8594;</a>
         </div>
         <div className="rp-grid-4">
-          {RAW_PRODUCTS.map(p => <ProductCard key={p.id} product={p} showFavorite showQuickAdd />)}
+          {products.map(p => <ProductCard key={p.id} product={p} showFavorite showQuickAdd />)}
         </div>
       </section>
 

@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { useState } from 'react';
-import { RAW_PRODUCTS, money } from '../data/products';
+import { money } from '../data/products';
 import { useApp } from '../context/AppContext';
 import ProductCard from '../components/ProductCard';
 
@@ -10,12 +10,13 @@ const DISABLED_SIZES = ['37', '42'];
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { cart, subtotal, shipping, favorites, toggleFavorite, addToCart } = useApp();
-  const product = RAW_PRODUCTS.find(p => p.id === id) ?? RAW_PRODUCTS[0];
+  const { cart, subtotal, shipping, favorites, toggleFavorite, addToCart, products } = useApp();
+  const product = products.find(p => p.id === id) ?? products[0];
   const [size, setSize] = useState('39');
   const [qty, setQty] = useState(1);
+  if (!product) return <div className="rp-empty-state">Producto no encontrado.</div>;
   const isFav = favorites.includes(product.id);
-  const related = RAW_PRODUCTS.filter(p => p.id !== product.id).slice(0, 4);
+  const related = products.filter(p => p.id !== product.id).slice(0, 4);
   const total = subtotal + shipping;
 
   return (
@@ -127,4 +128,3 @@ export default function ProductDetail() {
     </div>
   );
 }
-

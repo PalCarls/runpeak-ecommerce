@@ -1,14 +1,34 @@
 import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import { money } from '../data/products';
 import { useApp } from '../context/AppContext';
 
 export default function Checkout() {
   const navigate = useNavigate();
   const { cart, subtotal, shipping, discount, total, couponApplied, applyCoupon, placeOrder } = useApp();
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
-  function confirm() {
-    placeOrder();
-    navigate('/confirmacion');
+  async function confirm() {
+    if (!cart.length || submitting) return;
+    setSubmitting(true);
+    setError('');
+    try {
+      await placeOrder();
+      navigate('/confirmacion');
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : 'No se pudo registrar el pedido');
+      setSubmitting(false);
+    }
+  }
+
+  async function applyDemoCoupon() {
+    setError('');
+    try {
+      await applyCoupon();
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : 'No se pudo aplicar el cupón');
+    }
   }
 
   return (
@@ -68,13 +88,14 @@ export default function Checkout() {
           ))}
           <div className="coupon-row">
             <div className="coupon-input">{couponApplied ? 'RUNPEAK10 aplicado' : 'Código de cupón'}</div>
-            <button className="coupon-btn" onClick={applyCoupon}>Aplicar</button>
+            <button className="coupon-btn" onClick={applyDemoCoupon}>Aplicar</button>
           </div>
           <div className="rp-summary-line"><span>Subtotal</span><span>{money(subtotal)}</span></div>
           {couponApplied && <div className="rp-summary-line"><span>Descuento</span><span>&#8722; {money(discount)}</span></div>}
           <div className="rp-summary-line"><span>Envío</span><span>{shipping ? money(shipping) : 'Gratis'}</span></div>
           <div className="rp-summary-total"><span>Total a pagar</span><span>{money(total)}</span></div>
-          <button className="rp-btn-primary" style={{ width: '100%', marginTop: 20 }} onClick={confirm}>Confirmar y pagar &#8594;</button>
+          {error && <div style={{ color: 'var(--rp-red)', fontSize: 12, marginTop: 12 }}>{error}</div>}
+          <button className="rp-btn-primary" disabled={submitting || !cart.length} style={{ width: '100%', marginTop: 20 }} onClick={confirm}>{submitting ? 'Procesando...' : 'Confirmar y pagar →'}</button>
         </aside>
       </div>
     </div>

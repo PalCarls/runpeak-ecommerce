@@ -1,13 +1,14 @@
-import { RAW_PRODUCTS } from '../data/products';
 import ProductCard from '../components/ProductCard';
+import { useApp } from '../context/AppContext';
 
 export default function Catalog() {
+  const { products, apiError } = useApp();
   return (
     <div>
       <div className="detail-breadcrumb" style={{ paddingTop: 20 }}>Inicio &#8250; Catálogo &#8250; Calzado deportivo</div>
       <div className="catalog-header-row">
         <h1 className="rp-h2" style={{ margin: 0 }}>CALZADO DEPORTIVO</h1>
-        <div style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.5, color: 'var(--rp-gray)' }}>48 productos encontrados</div>
+        <div style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.5, color: 'var(--rp-gray)' }}>{products.length} productos encontrados</div>
       </div>
 
       <div className="catalog-layout">
@@ -55,7 +56,8 @@ export default function Catalog() {
             <div className="catalog-sort-box">Ordenar: Más relevante &#9662;</div>
           </div>
           <div className="rp-grid-3">
-            {RAW_PRODUCTS.map(p => <ProductCard key={p.id} product={p} showStockBadge showSizes />)}
+            {apiError && <div style={{ gridColumn: '1 / -1', color: 'var(--rp-red)' }}>Usando catálogo local: {apiError}</div>}
+            {products.map(p => <ProductCard key={p.id} product={p} showStockBadge showSizes />)}
           </div>
         </div>
       </div>

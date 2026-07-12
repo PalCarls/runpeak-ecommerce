@@ -1,11 +1,11 @@
 import { useNavigate } from 'react-router-dom';
-import { RAW_PRODUCTS, money } from '../data/products';
+import { money } from '../data/products';
 import { useApp } from '../context/AppContext';
 
 export default function Favorites() {
   const navigate = useNavigate();
-  const { favorites, removeFavorite, addToCart } = useApp();
-  const products = RAW_PRODUCTS.filter(p => favorites.includes(p.id));
+  const { favorites, removeFavorite, addToCart, products: catalog } = useApp();
+  const products = catalog.filter(p => favorites.includes(p.id));
 
   return (
     <div>
