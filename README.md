@@ -1,221 +1,246 @@
 # RunPeak eCommerce
 
-RunPeak eCommerce es un proyecto base para demostrar prácticas de Scrum, DevOps y DevSecOps en un entorno académico.
+RunPeak es un prototipo académico de tienda virtual para el curso de Ingeniería
+de Software. Permite practicar planificación, desarrollo con agentes, pruebas,
+colaboración y despliegue continuo.
 
-## Stack tecnológico
+## Funciones actuales
 
-- **Frontend:** React + Vite + TypeScript
-- **Backend:** Express + TypeScript
-- **ORM:** TypeORM
-- **Base de datos:** PostgreSQL
-- **Testing:** Vitest
-- **CI/CD:** GitHub Actions
-- **Seguridad:** CodeQL y Dependabot
+- Catálogo y detalle de productos.
+- Registro e inicio de sesión.
+- Favoritos y carrito de compra.
+- Compra y consulta de pedidos.
+- Administración de productos, inventario y pedidos.
 
-## Estructura del repositorio
+El pago es simulado: no procesa dinero ni utiliza tarjetas reales.
+
+## Arquitectura
 
 ```text
-runpeak-ecommerce/
-├── frontend/
-├── backend/
-├── docs/
-├── .github/
-│   ├── workflows/
-│   ├── dependabot.yml
-│   └── pull_request_template.md
-├── .gitignore
-├── .editorconfig
-└── README.md
+Usuario → Interfaz en Vercel → Servidor en Vercel → Base de datos en Supabase
 ```
 
-## Flujo Scrum + DevOps + DevSecOps
+- **Interfaz:** pantallas de la tienda, desarrolladas con React.
+- **Servidor:** reglas del negocio y seguridad, desarrollado con Express.
+- **Base de datos:** productos, usuarios y pedidos almacenados en PostgreSQL.
+- **GitHub:** código, tareas, revisiones y automatizaciones.
+- **Vercel:** publicación y versiones temporales para probar cambios.
+- **Supabase:** base de datos de la versión publicada.
 
-1. Planificación del trabajo en issues y sprint backlog.
-2. Desarrollo en ramas con Pull Requests.
-3. Ejecución automática de CI (instalación, build y pruebas).
-4. Revisión de código y validaciones de seguridad (CodeQL, Dependabot).
-5. Merge a `main` con trazabilidad del cambio.
+## Enlaces útiles
 
-## Inicio rápido local
+| Recurso | Enlace | Utilidad |
+| --- | --- | --- |
+| Aplicación | [runpeak-ecommerce.vercel.app](https://runpeak-ecommerce.vercel.app) | Probar la tienda publicada. |
+| Repositorio | [github.com/PalCarls/runpeak-ecommerce](https://github.com/PalCarls/runpeak-ecommerce) | Consultar tareas, código y solicitudes de cambios. |
+| Estado del servidor | [Ver estado](https://runpeak-ecommerce-backend-palcarls-projects.vercel.app/api/health) | Confirmar que el servidor responde. |
+| Estado de la base de datos | [Ver conexión](https://runpeak-ecommerce-backend-palcarls-projects.vercel.app/api/health/db) | Confirmar la conexión con Supabase. |
+| Productos | [Ver productos](https://runpeak-ecommerce-backend-palcarls-projects.vercel.app/api/products) | Confirmar que se pueden consultar datos. |
 
-Requisitos: Docker, Docker Compose, Node.js y npm.
+La aplicación y el repositorio son públicos. Actualmente los enlaces del
+servidor solicitan iniciar sesión en Vercel porque el despliegue está protegido.
+Para usarlos como comprobaciones públicas se debe desactivar esa protección en
+Vercel o configurar un dominio público para el servidor.
 
-Todos los comandos siguientes se ejecutan desde la raíz del repositorio.
+## Trabajo con agentes
 
-### 1. Preparar el entorno
+No es necesario que todos los integrantes programen. El equipo define la
+necesidad y valida el resultado; el agente puede analizar, implementar, probar y
+documentar el cambio.
+
+Cada funcionalidad debe indicar:
+
+```text
+Como: tipo de usuario
+Quiero: funcionalidad
+Para: beneficio esperado
+
+Debe cumplirse:
+1. Resultado observable.
+2. Comportamiento ante un caso incorrecto.
+3. Condición que permita aprobar la tarea.
+```
+
+Ejemplo de solicitud al agente:
+
+```text
+Implementa esta funcionalidad en una rama nueva.
+Revisa primero el funcionamiento actual, agrega pruebas y comprueba el flujo.
+No publiques cambios sin autorización.
+Al terminar, explica qué cambiaste y cómo probarlo.
+```
+
+## Flujo de trabajo
+
+1. Registrar la funcionalidad en una tarea de GitHub.
+2. Crear una rama para ese cambio.
+3. Pedir al agente que implemente y pruebe la solución.
+4. Crear una solicitud de cambios (*Pull Request*).
+5. Probar el enlace temporal generado por Vercel.
+6. Aprobar y unir el cambio si cumple lo solicitado.
+7. Presentar el avance y registrar lo aprendido en la iteración.
+
+Una persona diferente debe probar el resultado antes de aprobarlo.
+
+## Cómo probar una funcionalidad
+
+Desde el enlace temporal de Vercel, comprobar:
+
+- Que se cumplan los criterios de la tarea.
+- Que los mensajes sean claros.
+- Que los casos incorrectos no rompan la aplicación.
+- Que sigan funcionando el catálogo, el carrito y el inicio de sesión.
+- Que la pantalla se vea correctamente en computadora y teléfono.
+
+Si existe un error, registrar los pasos realizados, el resultado obtenido y el
+resultado esperado. Adjuntar una captura cuando sea útil.
+
+## Avance sugerido del prototipo
+
+1. **Experiencia básica:** corregir errores y simplificar registro, compra y
+   consulta de pedidos.
+2. **Facilitar la compra:** incorporar búsqueda, filtros y mejor información de
+   tallas y disponibilidad.
+3. **Mejorar la administración:** facilitar la gestión de inventario y pedidos.
+4. **Validar con usuarios:** medir resultados, mejorar accesibilidad y revisar
+   seguridad antes de considerar pagos reales.
+
+Conviene entregar una mejora pequeña y demostrable en cada iteración.
+
+## Infraestructura
+
+La versión publicada utiliza tres recursos:
+
+1. Una base PostgreSQL en Supabase.
+2. Un proyecto de Vercel con **Directorio raíz** (*Root Directory*) `backend`.
+3. Otro proyecto de Vercel con **Directorio raíz** (*Root Directory*) `frontend`.
+
+Variables principales del backend:
+
+```text
+DATABASE_URL=<conexión de Supabase>
+DATABASE_SSL=true
+FRONTEND_URL=https://<frontend>
+AUTH_SECRET=<cadena aleatoria larga>
+ADMIN_EMAIL=<correo administrador>
+ADMIN_PASSWORD=<contraseña segura>
+```
+
+Generar `AUTH_SECRET` con:
+
+```bash
+openssl rand -base64 48
+```
+
+Variable del frontend:
+
+```text
+VITE_API_URL=https://<backend>/api
+```
+
+Las claves se guardan en Vercel. Nunca deben publicarse en GitHub.
+
+## Comandos principales
+
+Se requiere Docker, Node.js y npm. Todos los comandos se ejecutan desde la
+carpeta principal del proyecto.
+
+### Crear una rama para una funcionalidad
+
+```bash
+git switch dev
+git pull origin dev
+git switch -c feature/nombre-funcionalidad
+```
+
+Al terminar y después de comprobar el cambio:
+
+```bash
+git status
+git add <archivos-modificados>
+git commit -m "feat: descripción breve"
+git push -u origin feature/nombre-funcionalidad
+```
+
+Luego se crea en GitHub una solicitud de cambios hacia `dev`.
+
+### Preparar el proyecto por primera vez
 
 ```bash
 cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
 npm --prefix backend install
 npm --prefix frontend install
-```
-
-### 2. Iniciar PostgreSQL
-
-```bash
 docker compose up -d
-docker compose ps
-```
-
-> `compose.yaml` es el archivo de configuración; no se escribe como subcomando.
-> En este proyecto no necesitas `build`: Compose solo inicia PostgreSQL desde
-> una imagen ya publicada.
-
-### 3. Crear las tablas y datos iniciales
-
-```bash
 npm --prefix backend run db:setup
 ```
 
-### 4. Iniciar la aplicación
+### Iniciar el proyecto
 
-Terminal 1 (backend):
+En una terminal, iniciar el servidor:
 
 ```bash
 npm --prefix backend run dev
 ```
 
-Terminal 2 (frontend):
+En otra terminal, iniciar la interfaz:
 
 ```bash
 npm --prefix frontend run dev
 ```
 
-Abre `http://localhost:5173`. La API queda en `http://localhost:3000/api`.
+Abrir `http://localhost:5173` en el navegador.
 
-Para detener PostgreSQL:
+### Comprobar antes de entregar un cambio
+
+```bash
+npm --prefix backend test
+npm --prefix backend run build
+npm --prefix frontend run lint
+npm --prefix frontend run build
+```
+
+Los comandos deben terminar sin errores. Actualmente el análisis del frontend
+muestra una advertencia en `AppContext.tsx`, pero no impide la compilación.
+
+El frontend todavía no tiene pruebas automáticas. Por eso no se incluye
+`npm --prefix frontend test`: ese comando devuelve `No test files found` hasta
+que se creen las primeras pruebas.
+
+### Cambios en la base de datos
+
+Todo cambio de tablas debe guardarse como una migración en
+`backend/src/migrations/`. No se deben modificar las tablas de producción sin
+dejar ese registro en el repositorio.
+
+```bash
+npm --prefix backend run db:migrate
+```
+
+Para cargar los datos iniciales:
+
+```bash
+npm --prefix backend run db:seed
+```
+
+Las migraciones de producción todavía son manuales. Deben ejecutarse con la
+conexión de Supabase configurada y verificarse después desde el panel de
+Supabase y el enlace relacionado del servidor.
+
+### Detener el proyecto
+
+Detener los procesos de las dos terminales con `Ctrl + C` y luego ejecutar:
 
 ```bash
 docker compose down
 ```
 
-Los datos se conservan en un volumen de Docker. Para eliminarlos también, usa
-`docker compose down -v`.
+## Reglas básicas
 
-### Health check
+- No compartir contraseñas, claves de acceso ni datos personales con agentes.
+- No usar tarjetas o información real durante las pruebas.
+- No aprobar cambios sin probarlos.
+- No publicar directamente sin una solicitud de cambios (*Pull Request*).
 
-Con el backend ejecutándose, validar:
-
-```bash
-curl http://localhost:3000/api/health
-curl http://localhost:3000/api/health/db
-```
-
-Respuesta esperada:
-
-```json
-{"status":"OK"}
-```
-
-## API del MVP
-
-La API está disponible bajo `/api` e incluye:
-
-- `GET /products` y `GET /products/:slug`: catálogo, variantes y stock.
-- `GET /coupons` y `POST /coupons/validate`: promociones vigentes.
-- `POST /auth/register`, `POST /auth/login` y `GET /auth/me`: cuentas y sesión.
-- `GET|POST|DELETE /favorites`: favoritos de clientes autenticados.
-- `POST /orders`: checkout como invitado o usuario, validación de precios, cupón
-  y stock dentro de una transacción.
-- `GET /orders/:number?email=...`: seguimiento para compras como invitado.
-- `/admin/products`, `/admin/orders` y `/admin/dashboard`: gestión protegida por
-  rol de administrador.
-
-El esquema está en `backend/src/migrations/001_initial.sql`. Para recrear o
-actualizar los datos iniciales locales:
-
-```bash
-cd backend
-npm run db:migrate
-npm run db:seed
-```
-
-El usuario administrativo local inicial es `admin@runpeak.local` con contraseña
-`Admin123!`. Estas credenciales son solo para desarrollo; en producción se deben
-configurar `ADMIN_EMAIL`, `ADMIN_PASSWORD` y un `AUTH_SECRET` largo antes de
-ejecutar el seed.
-
-### Alcance del pago
-
-El checkout del MVP registra el pago como aprobado para permitir probar el flujo
-completo, pero no procesa ni almacena números de tarjeta. Para aceptar dinero
-real se debe integrar una pasarela como Mercado Pago, Culqi o Stripe y confirmar
-el pago mediante webhooks antes de marcar el pedido como pagado.
-
-## Despliegue simple: Supabase + Vercel
-
-El despliegue usa tres recursos: una base de datos en Supabase y dos proyectos
-en Vercel (backend y frontend). Ambos proyectos de Vercel apuntan al mismo
-repositorio.
-
-### 1. Crear la base de datos
-
-1. Crea un proyecto en Supabase.
-2. En **Connect**, copia la URL **Transaction pooler** (puerto `6543`).
-3. Guárdala temporalmente: se usará como `DATABASE_URL`.
-
-### 2. Desplegar el backend
-
-1. En Vercel, importa este repositorio.
-2. En **Root Directory**, selecciona `backend`.
-3. Agrega estas variables de entorno:
-
-```text
-DATABASE_URL=<URL Transaction pooler de Supabase>
-DATABASE_SSL=true
-DATABASE_POOL_MAX=3
-FRONTEND_URL=https://<dominio-del-frontend-en-vercel>
-AUTH_SECRET=<secreto-aleatorio-largo>
-ADMIN_EMAIL=<correo-administrador>
-ADMIN_PASSWORD=<contraseña-segura-inicial>
-```
-
-4. Pulsa **Deploy** y copia el dominio generado para el backend.
-
-El dominio del frontend todavía no existirá en el primer despliegue. Puedes
-completar `FRONTEND_URL` después del paso 3 y volver a desplegar el backend.
-
-### 3. Desplegar el frontend
-
-1. En Vercel, importa nuevamente el mismo repositorio como otro proyecto.
-2. En **Root Directory**, selecciona `frontend`.
-3. Agrega esta variable de entorno:
-
-```text
-VITE_API_URL=https://<dominio-del-backend>/api
-```
-
-4. Pulsa **Deploy** y copia el dominio generado para el frontend.
-5. Regresa al proyecto del backend, asigna ese dominio a `FRONTEND_URL` y vuelve
-   a desplegarlo.
-
-### 4. Crear tablas y usuario administrador
-
-Desde una terminal local, ejecuta una sola vez:
-
-```bash
-cd backend
-DATABASE_URL='<URL Transaction pooler de Supabase>' \
-DATABASE_SSL=true \
-ADMIN_EMAIL='<correo-administrador>' \
-ADMIN_PASSWORD='<contraseña-segura>' \
-npm run db:setup
-cd ..
-```
-
-### 5. Comprobar el despliegue
-
-```bash
-curl https://<dominio-del-backend>/api/health
-curl https://<dominio-del-backend>/api/health/db
-```
-
-Ambas respuestas deben indicar `OK`. Después abre el dominio del frontend y
-prueba el catálogo y el inicio de sesión.
-
-Para permitir varios dominios en CORS, sepáralos con comas en `FRONTEND_URL`.
-El archivo `frontend/vercel.json` permite abrir directamente rutas SPA como
-`/catalogo`, `/carrito` o `/admin` sin recibir un error 404.
-
-No copiar los archivos `.env` locales a Vercel ni guardar secretos en Git.
+Antes de convertir el prototipo en un producto real se requiere una revisión
+adicional de seguridad, privacidad y operación.
