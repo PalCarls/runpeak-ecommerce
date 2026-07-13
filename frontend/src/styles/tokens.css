@@ -1,0 +1,16 @@
+:root {
+  --rp-black: #0A0A0A;
+  --rp-black-soft: #171717;
+  --rp-orange: #FF4405;
+  --rp-gray: #7A7A76;
+  --rp-paper: #FAFAF8;
+  --rp-border: #e5e5e5;
+  --rp-border-dark: #2a2a2a;
+  --rp-green: #15803d;
+  --rp-red: #b91c1c;
+  --rp-amber: #b45309;
+  --rp-blue: #1d4ed8;
+
+  --font-display: 'Bebas Neue', sans-serif;
+  --font-sans: 'Inter', sans-serif;
+}
